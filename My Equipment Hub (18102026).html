@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Equipment Hub</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#667085;--bd:#e3e6ea;--ac:#2557d6;--tech:#d9822b;--own:#2557d6;--proj:#2e9e6b;--bad:#c93c3c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#14171c;--card:#1d2128;--tx:#e8eaed;--mut:#9aa3af;--bd:#2d333b;--ac:#6b93f5;--tech:#e8a05a;--own:#6b93f5;--proj:#52c394;--bad:#ef6b6b}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#14171c;--card:#1d2128;--tx:#e8eaed;--mut:#9aa3af;--bd:#2d333b;--ac:#6b93f5;--tech:#e8a05a;--own:#6b93f5;--proj:#52c394;--bad:#ef6b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0}.sub{color:var(--mut);font-size:13px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:10px 0}
+.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--mut)}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--bd);margin:6px 0 4px}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mut);flex-wrap:wrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:8px 0}
+input,select,textarea,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:7px 9px;min-width:0;width:100%}
+button{width:auto;cursor:pointer;background:var(--card)}
+button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+button.on{border-color:var(--ac);color:var(--ac);font-weight:600}
+label{font-size:12px;color:var(--mut);display:block;margin-bottom:2px}
+a{color:var(--ac)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;margin-bottom:10px}
+.lg{display:flex;gap:8px;align-items:baseline;font-size:13px;padding:2px 0}.lg button{padding:0 6px;font-size:11px;margin-left:auto}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.filters>*{flex:1 1 120px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.task{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;border-left:4px solid var(--bd)}
+.task.Technician{border-left-color:var(--tech)}.task.Owner{border-left-color:var(--own)}.task.Project{border-left-color:var(--proj)}
+.task.done .t{text-decoration:line-through;opacity:.7}
+.t{font-weight:600}.meta{font-size:12px;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.od{color:var(--bad);font-weight:600}
+.tag{border:1px solid var(--bd);border-radius:20px;padding:0 8px;font-size:11px}
+.actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.actions select,.actions button{padding:3px 7px;font-size:12px;width:auto}
+.th{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:pointer;margin:6px 6px 0 0}
+.rm{position:relative;display:inline-block}.rm button{position:absolute;top:2px;right:8px;padding:0 5px;font-size:11px}
+.hide{display:none}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}
+#ov img{max-width:100%;max-height:100%;border-radius:8px}
+#ov.hide{display:none}
+.bkbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;border-color:var(--bad)}
+.bkbar.hide{display:none}
+</style></head>
+<body><div class="wrap">
+<header><div><h1>My Equipment Hub</h1><div class="sub" id="today"></div></div>
+<div style="display:flex;gap:6px"><button onclick="openForm()">+ Detailed task</button><button onclick="openBackup()">Backup</button><button class="pri" onclick="openReport()">End-of-day report</button></div></header>
+
+<div class="card bkbar hide" id="bk"><span id="bkTxt"></span><button class="pri" onclick="openBackup(true);exportFile()">Back up now</button></div>
+<input id="qa" placeholder="Quick add task, press Enter  (tip: @tool for the equipment, ! for high priority)" onkeydown="quickAdd(event)">
+
+<div class="two" style="margin-top:10px">
+<div class="card"><label>Work log: note what you did as you go (feeds your report)</label><input id="lgIn" placeholder="e.g. Replaced pump seal on SRD, leak check passed" onkeydown="addLog(event)"><div id="logList" style="margin-top:6px"></div></div>
+<div class="card"><div class="sub">Where my open work sits</div><div class="bar" id="bar"></div>
+<div class="legend"><span><i class="dot" style="background:var(--tech)"></i>Technician <b id="cT">0</b></span><span><i class="dot" style="background:var(--own)"></i>Owner <b id="cO">0</b></span><span><i class="dot" style="background:var(--proj)"></i>Project <b id="cP">0</b></span></div></div>
+</div>
+
+<div class="stats">
+<div class="card stat"><b id="sOpen">0</b><span>Open</span></div>
+<div class="card stat"><b id="sOver" style="color:var(--bad)">0</b><span>Overdue</span></div>
+<div class="card stat"><b id="sBlk">0</b><span>Blocked</span></div>
+<div class="card stat"><b id="sFu" style="color:var(--bad)">0</b><span>Follow-ups due</span></div>
+<div class="card stat"><b id="sDone" style="color:var(--proj)">0</b><span>Done today</span></div>
+</div>
+
+<div class="card hide" id="form">
+<b id="fHead">New task</b>
+<div class="grid">
+<div style="grid-column:1/-1"><label>Task</label><input id="fTitle" placeholder="e.g. Etcher 03 chamber leak check"></div>
+<div><label>Report type</label><select id="fType"></select></div>
+<div><label>Equipment / tool</label><input id="fTool" placeholder="Etcher 03"></div>
+<div><label>Tier</label><select id="fTier"><option>Technician</option><option>Owner</option><option>Project</option></select></div>
+<div><label>Priority</label><select id="fPri"><option value="1">High</option><option value="2" selected>Medium</option><option value="3">Low</option></select></div>
+<div><label>Due date</label><input id="fDue" type="date"></div>
+<div><label>Repeats</label><select id="fRec"><option value="0">No</option><option value="7">Weekly</option><option value="14">Every 2 weeks</option><option value="30">Monthly</option><option value="90">Quarterly</option></select></div>
+<div><label>Follow-up date</label><input id="fFu" type="date"></div>
+<div><label>Follow-up note</label><input id="fFuNote" placeholder="What to check"></div>
+<div style="grid-column:1/-1"><label>Notes</label><textarea id="fNotes" rows="2"></textarea></div>
+<div style="grid-column:1/-1"><label>Document links (Excel, Word, etc.): one per line. SharePoint / Drive URL or network path</label><textarea id="fLinks" rows="2" placeholder="https://..."></textarea></div>
+<div style="grid-column:1/-1"><label>Attach pictures (resized to save space)</label><input id="fFile" type="file" accept="image/*" multiple onchange="addFiles(this)"><div id="fAtt"></div></div>
+</div>
+<div style="display:flex;gap:6px"><button class="pri" id="fBtn" onclick="saveTask()">Add task</button><button onclick="closeForm()">Cancel</button></div></div>
+
+<div class="card hide" id="bkp" style="margin-bottom:10px"><b>Backup &amp; restore</b><div class="sub" id="bkInfo" style="margin:4px 0 8px"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="pri" onclick="exportFile()">Download backup file</button><button onclick="copyBackup()">Copy backup as text</button><button onclick="$('bkp').classList.add('hide')">Close</button></div><div class="sub" id="bkMsg" style="margin-bottom:8px"></div><label>Restore: choose a backup file</label><input type="file" id="impFile" accept=".json,application/json" onchange="impFromFile(this)"><label style="margin-top:8px">Or paste backup text</label><textarea id="impTxt" rows="2"></textarea><button style="margin-top:6px" onclick="impFromText()">Load pasted text</button><div class="hide" id="impBox" style="margin-top:10px"><div id="impSum"></div><div class="sub" style="margin:4px 0"><b>Merge</b> adds anything missing and keeps what is already here. <b>Replace</b> wipes what is here and uses the backup.</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="pri" onclick="impDo('merge',this)">Merge (add missing)</button><button onclick="impDo('replace',this)">Replace everything</button><button onclick="pendImp=null;$('impBox').classList.add('hide')">Cancel</button></div></div></div>
+<div class="card hide" id="rep" style="margin-bottom:10px"><b>End-of-day report</b>
+<div class="grid"><div><label>Your name (shown on the report)</label><input id="rName" oninput="cfgSave()"></div>
+<div style="grid-column:1/-1"><label>Notes for today's report (issues, handover, highlights)</label><textarea id="rNote" rows="2" oninput="cfgSave()"></textarea></div></div>
+<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap"><button class="pri" onclick="makeReport()">Refresh report</button><button onclick="copyRep()">Copy</button><button onclick="$('rep').classList.add('hide')">Close</button></div>
+<div class="sub" style="margin-bottom:4px">You can edit the text below before copying. Refresh rebuilds it from today's tasks, log and notes.</div>
+<textarea id="repTxt" rows="18" style="font-family:ui-monospace,Menlo,monospace;font-size:13px"></textarea></div>
+
+<div class="tabs"><button id="tT" onclick="setView('today')">Today</button><button id="tA" onclick="setView('all')">All active</button><button id="tL" onclick="setView('log')">Completed log</button></div>
+<div class="filters">
+<input id="q" placeholder="Search task or tool" oninput="render()">
+<select id="fltTier" onchange="render()"><option value="">All tiers</option><option>Technician</option><option>Owner</option><option>Project</option></select>
+<select id="fltType" onchange="render()"></select>
+</div>
+<div id="list"></div>
+</div>
+<div id="ov" class="hide" onclick="this.classList.add('hide')"><img id="ovImg" alt=""></div>
+<script>
+const KEY='equip-task-hub-v1',LKEY='equip-hub-log-v1',SKEY='equip-hub-settings-v1';
+const TYPES=['Anomaly','PM','Hook-Up','Calibration','Modification','Improvement','Other'];
+const ST=['Open','In progress','Blocked','Done'];
+const iso=d=>{const z=new Date(d.getTime()-d.getTimezoneOffset()*6e4);return z.toISOString().slice(0,10)};
+const today=()=>iso(new Date());
+const plus=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tasks=[],logs=[],cfg={name:'',note:{d:'',x:''}},view='today',editId=null,pend=[];
+function ld(k){try{const r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e){return null}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){alert('Browser storage is full. Remove some pictures or old tasks.');return false}}
+const save=()=>sv(KEY,tasks);
+function norm(t){t.type=t.type||'Other';t.att=t.att||[];t.hist=t.hist||[];t.fuDate=t.fuDate||'';t.fuNote=t.fuNote||'';t.links=t.links||[];t.pin=t.pin||'';return t}
+function hist(t,m){t.hist.push(today()+': '+m)}
+const isOver=t=>t.status!=='Done'&&t.due&&t.due<today();
+const fuDue=t=>t.status!=='Done'&&t.fuDate&&t.fuDate<=today();
+function quickAdd(e){if(e.key!=='Enter')return;const raw=e.target.value.trim();if(!raw)return;
+const m=raw.match(/@(\S+)/),title=raw.replace(/@\S+/,'').replace(/!+/g,'').replace(/\s+/g,' ').trim()||raw;
+const t=norm({id:Date.now(),title,type:'Other',tool:m?m[1]:'',tier:'Technician',pri:/!/.test(raw)?1:2,due:'',owner:cfg.name||'Me',status:'Open',rec:0,notes:'',pin:today()});
+hist(t,'created');tasks.push(t);e.target.value='';save();render()}
+function addLog(e){if(e.key!=='Enter')return;const x=e.target.value.trim();if(!x)return;
+logs.push({id:Date.now(),d:today(),t:new Date().toTimeString().slice(0,5),x});e.target.value='';sv(LKEY,logs);render()}
+function delLog(id){logs=logs.filter(l=>l.id!==id);sv(LKEY,logs);render()}
+function togglePin(id){const t=tasks.find(x=>x.id===id);t.pin=t.pin===today()?'':today();save();render()}
+function openForm(id){editId=id||null;const t=id?tasks.find(x=>x.id===id):null;
+$('fHead').textContent=t?'Edit task':'New task';$('fBtn').textContent=t?'Save changes':'Add task';
+const v=(k,d)=>t?t[k]:d;
+$('fTitle').value=v('title','');$('fType').value=v('type','Anomaly');$('fTool').value=v('tool','');
+$('fTier').value=v('tier','Technician');$('fPri').value=v('pri',2);$('fDue').value=v('due','');$('fRec').value=v('rec',0);
+$('fFu').value=v('fuDate','');$('fFuNote').value=v('fuNote','');$('fNotes').value=v('notes','');$('fLinks').value=t?t.links.join('\n'):'';
+pend=t?t.att.slice():[];attPrev();$('form').classList.remove('hide');window.scrollTo(0,0);$('fTitle').focus()}
+function closeForm(){editId=null;pend=[];$('form').classList.add('hide')}
+function attPrev(){$('fAtt').innerHTML=pend.map((a,i)=>`<span class="rm"><img class="th" src="${a.d}" alt=""><button onclick="pend.splice(${i},1);attPrev()">x</button></span>`).join('')}
+function addFiles(inp){[...inp.files].forEach(f=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const m=900,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);pend.push({name:f.name,d:c.toDataURL('image/jpeg',.7)});attPrev()};im.src=r.result};r.readAsDataURL(f)});inp.value=''}
+function saveTask(){const title=$('fTitle').value.trim();if(!title){$('fTitle').focus();return}
+const d={title,type:$('fType').value,tool:$('fTool').value.trim(),tier:$('fTier').value,pri:+$('fPri').value,due:$('fDue').value,rec:+$('fRec').value,fuDate:$('fFu').value,fuNote:$('fFuNote').value.trim(),notes:$('fNotes').value.trim(),links:$('fLinks').value.split('\n').map(s=>s.trim()).filter(Boolean),att:pend.slice()};
+if(editId){const t=tasks.find(x=>x.id===editId);Object.assign(t,d);hist(t,'edited')}
+else{const t=norm({id:Date.now(),status:'Open',owner:cfg.name||'Me',pin:today(),...d});hist(t,'created');tasks.push(t)}
+if(save()){closeForm();render()}}
+function setStatus(id,st){const t=tasks.find(x=>x.id===id);if(!t||t.status===st)return;
+if(st==='Done'&&t.rec){tasks.push(norm({...t,id:Date.now(),status:'Open',doneAt:'',pin:'',due:plus(t.due&&t.due>today()?t.due:today(),t.rec),att:[],hist:['recurring copy created '+today()],fuDate:'',fuNote:''}))}
+hist(t,t.status+' → '+st);t.status=st;t.doneAt=st==='Done'?today():'';if(st==='Done')t.pin='';save();render()}
+function fuDone(id){const t=tasks.find(x=>x.id===id);hist(t,'follow-up done'+(t.fuNote?' ('+t.fuNote+')':''));t.fuDate='';t.fuNote='';save();render()}
+function del(id,b){if(!b.dataset.s){b.dataset.s=1;b.textContent='Confirm?';setTimeout(()=>{b.dataset.s='';b.textContent='Delete'},3000);return}tasks=tasks.filter(x=>x.id!==id);save();render()}
+function zoom(id,i){$('ovImg').src=tasks.find(x=>x.id===id).att[i].d;$('ov').classList.remove('hide')}
+function linkHtml(l,i,id){if(/^https?:\/\//i.test(l)){const s=l.replace(/^https?:\/\//i,'');return `<a href="${esc(l)}" target="_blank" rel="noopener noreferrer">${esc(s.length>45?s.slice(0,45)+'…':s)}</a>`}return `<span>${esc(l)} <button onclick="cp(${id},${i})">Copy</button></span>`}
+function cp(id,i){try{navigator.clipboard.writeText(tasks.find(x=>x.id===id).links[i])}catch(e){}}
+function setView(v){view=v;render()}
+const inToday=t=>t.status!=='Done'&&(t.status==='In progress'||isOver(t)||t.due===today()||t.pin===today()||fuDue(t));
+function card(t){const lg=view==='log',h=lg?t.hist:t.hist.slice(-2),pinned=t.pin===today();
+return `<div class="card task ${t.tier} ${t.status==='Done'?'done':''}"><div style="flex:1;min-width:0">
+<div class="t">${esc(t.title)}</div>
+<div class="meta"><span class="tag">${esc(t.type)}</span><span class="tag">${t.tier}</span><span class="tag">${t.status}</span>${t.tool?`<span>🔧 ${esc(t.tool)}</span>`:''}
+${lg?`<span>Completed ${t.doneAt||'—'}</span>`:`<span>${['','High','Medium','Low'][t.pri]} priority</span>${t.due?`<span class="${isOver(t)?'od':''}">${isOver(t)?'Overdue · ':'Due '}${t.due}</span>`:''}`}${t.rec?`<span>↻ every ${t.rec}d</span>`:''}</div>
+${t.fuDate?`<div class="meta"><span class="${fuDue(t)?'od':''}">↪ Follow-up ${t.fuDate}${t.fuNote?': '+esc(t.fuNote):''}</span></div>`:''}
+${t.notes?`<div class="sub">${esc(t.notes)}</div>`:''}
+${t.links.length?`<div class="meta">📎 ${t.links.map((l,i)=>linkHtml(l,i,t.id)).join(' ')}</div>`:''}
+${t.att.map((a,i)=>`<img class="th" src="${a.d}" alt="" onclick="zoom(${t.id},${i})">`).join('')}
+${h.length?`<div class="sub" style="margin-top:4px;font-size:11px">${h.map(esc).join(' · ')}</div>`:''}
+<div class="actions">${lg?`<button onclick="setStatus(${t.id},'Open')">Reopen</button>`:`<select onchange="setStatus(${t.id},this.value)">${ST.map(s=>`<option${s===t.status?' selected':''}>${s}</option>`).join('')}</select><button onclick="togglePin(${t.id})">${pinned?'★ Planned today':'☆ Plan for today'}</button>${t.fuDate?`<button onclick="fuDone(${t.id})">Follow-up done</button>`:''}`}
+<button onclick="openForm(${t.id})">Edit</button><button onclick="del(${t.id},this)">Delete</button></div>
+</div></div>`}
+function render(){
+updBackupUI();
+const t0=today(),open=tasks.filter(t=>t.status!=='Done'),tdy=open.filter(inToday);
+$('today').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+$('sOpen').textContent=open.length;$('sOver').textContent=open.filter(isOver).length;
+$('sBlk').textContent=open.filter(t=>t.status==='Blocked').length;$('sFu').textContent=open.filter(fuDue).length;
+$('sDone').textContent=tasks.filter(t=>t.doneAt===t0).length;
+const c={Technician:0,Owner:0,Project:0};open.forEach(t=>c[t.tier]++);
+$('cT').textContent=c.Technician;$('cO').textContent=c.Owner;$('cP').textContent=c.Project;
+const tot=open.length||1;
+$('bar').innerHTML=[['Technician','tech'],['Owner','own'],['Project','proj']].map(([k,v])=>`<div style="width:${c[k]/tot*100}%;background:var(--${v})"></div>`).join('');
+$('tT').textContent='Today ('+tdy.length+')';$('tA').textContent='All active ('+open.length+')';$('tL').textContent='Completed log ('+(tasks.length-open.length)+')';
+['T:today','A:all','L:log'].forEach(s=>{const[k,v]=s.split(':');$('t'+k).className=view===v?'on':''});
+$('logList').innerHTML=logs.filter(l=>l.d===t0).sort((a,b)=>b.id-a.id).map(l=>`<div class="lg"><span class="sub">${l.t}</span><span>${esc(l.x)}</span><button onclick="delLog(${l.id})">x</button></div>`).join('')||'<div class="sub">Nothing logged yet today.</div>';
+const q=$('q').value.toLowerCase(),ft=$('fltTier').value,fy=$('fltType').value;
+let list=tasks.filter(t=>(view==='log'?t.status==='Done':view==='today'?inToday(t):t.status!=='Done')&&(!q||(t.title+' '+t.tool).toLowerCase().includes(q))&&(!ft||t.tier===ft)&&(!fy||t.type===fy));
+const rank=t=>(isOver(t)?0:1)*10+t.pri;
+list.sort(view==='log'?(a,b)=>(b.doneAt||'')<(a.doneAt||'')?-1:1:view==='today'?(a,b)=>rank(a)-rank(b)||((a.due||'9')<(b.due||'9')?-1:1):(a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+$('list').innerHTML=list.map(card).join('')||`<div class="sub">${view==='today'?'Nothing on your plate today. Add a task above, or use ☆ Plan for today on a task in All active.':'Nothing here yet.'}</div>`}
+let dl=null,pendImp=null;
+function bkData(){return{app:'equipment-hub',version:1,exportedAt:new Date().toISOString(),tasks,logs,settings:cfg}}
+function bkNote(m){$('bkMsg').textContent=m}
+function updBackupUI(){const n=tasks.length+logs.length,lb=cfg.lastBackup;let d=null;
+if(lb)d=Math.round((new Date(today()+'T12:00:00')-new Date(iso(new Date(lb))+'T12:00:00'))/864e5);
+const stale=n>0&&(!lb||d>=1);$('bk').classList.toggle('hide',!stale);
+$('bkTxt').textContent=!lb?'No backup yet. Download one so your data survives a browser reset.':'Last backup was '+(d===1?'yesterday':d+' days ago')+'.';
+$('bkInfo').textContent=(lb?'Last backup: '+iso(new Date(lb)):'No backup yet')+' · '+tasks.length+' tasks, '+logs.length+' log entries in this browser.'}
+function openBackup(force){const el=$('bkp');if(force)el.classList.remove('hide');else el.classList.toggle('hide');bkNote('');updBackupUI();window.scrollTo(0,0)}
+async function exportFile(){const fn='equipment-hub-backup-'+today()+'.json';
+try{if(!dl&&typeof claude!=='undefined')dl=await claude.use('downloads')}catch(e){dl=null}
+if(!dl){bkNote('Direct download is not available in this view. Use "Copy backup as text" and paste it into a file or note.');return}
+try{const now=new Date().toISOString();cfg.lastBackup=now;await dl.save({filename:fn,data:JSON.stringify(bkData())});sv(SKEY,cfg);bkNote('Backup saved as '+fn+'. Keep it somewhere outside the browser, such as a cloud drive.');updBackupUI()}
+catch(e){delete cfg.lastBackup;ld(SKEY)&&(cfg.lastBackup=(ld(SKEY)||{}).lastBackup);bkNote(e&&e.code==='declined'?'Download cancelled.':'Could not save the file ('+(e&&e.code||'error')+'). Try "Copy backup as text".');updBackupUI()}}
+function copyBackup(){cfg.lastBackup=new Date().toISOString();const s=JSON.stringify(bkData());
+try{navigator.clipboard.writeText(s).then(()=>{sv(SKEY,cfg);bkNote('Backup copied ('+Math.round(s.length/1024)+' KB). Paste it into a file or note and keep it safe.');updBackupUI()},()=>bkNote('The browser blocked copying.'))}catch(e){bkNote('The browser blocked copying.')}}
+function impFromFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>parseImp(r.result);r.readAsText(f);inp.value=''}
+function impFromText(){parseImp($('impTxt').value)}
+function parseImp(txt){let b;try{b=JSON.parse(txt)}catch(e){bkNote('That is not a valid backup: it could not be read.');return}
+if(!b||b.app!=='equipment-hub'||!Array.isArray(b.tasks)){bkNote('That is not an Equipment Hub backup.');return}
+pendImp=b;const dn=b.tasks.filter(t=>t.status==='Done').length;
+$('impSum').textContent='Backup from '+String(b.exportedAt||'').slice(0,10)+': '+b.tasks.length+' tasks ('+dn+' completed), '+(b.logs||[]).length+' log entries.';
+$('impBox').classList.remove('hide');bkNote('')}
+function impDo(mode,btn){const b=pendImp;if(!b)return;
+if(mode==='replace'&&!btn.dataset.s){btn.dataset.s=1;btn.textContent='Click again to replace everything';setTimeout(()=>{btn.dataset.s='';btn.textContent='Replace everything'},4000);return}
+let msg;
+if(mode==='replace'){tasks=b.tasks.map(norm);logs=b.logs||[];cfg=Object.assign({name:'',note:{d:'',x:''}},b.settings||{});cfg.lastBackup=b.exportedAt||cfg.lastBackup;msg='Restored '+tasks.length+' tasks and '+logs.length+' log entries.'}
+else{const ids=new Set(tasks.map(t=>t.id)),lids=new Set(logs.map(l=>l.id));let a=0,al=0;
+b.tasks.forEach(t=>{if(!ids.has(t.id)){tasks.push(norm(t));a++}});(b.logs||[]).forEach(l=>{if(!lids.has(l.id)){logs.push(l);al++}});
+if(!cfg.name&&b.settings&&b.settings.name)cfg.name=b.settings.name;msg='Merged: added '+a+' tasks and '+al+' log entries.'}
+save();sv(LKEY,logs);sv(SKEY,cfg);pendImp=null;$('impBox').classList.add('hide');render();bkNote(msg)}
+function cfgSave(){cfg.name=$('rName').value;cfg.note={d:today(),x:$('rNote').value};sv(SKEY,cfg)}
+function openReport(){$('rName').value=cfg.name||'';$('rNote').value=cfg.note&&cfg.note.d===today()?cfg.note.x:'';$('rep').classList.remove('hide');makeReport();window.scrollTo(0,0)}
+function makeReport(){const t0=today(),tm=plus(t0,1),op=tasks.filter(t=>t.status!=='Done'),dn=tasks.filter(t=>t.doneAt===t0),lg=logs.filter(l=>l.d===t0).sort((a,b)=>a.id-b.id);
+const ln=(t,x)=>' - ['+t.type+'] '+t.title+(t.tool?' ('+t.tool+')':'')+(x||'')+(t.links.length?' | docs: '+t.links.join(' ; '):'');
+const sec=(h,a,f)=>a.length?'\n'+h+'\n'+a.map(f).join('\n')+'\n':'';
+const nm=$('rName').value.trim(),note=$('rNote').value.trim();
+const nx=op.filter(t=>isOver(t)||(t.due&&t.due<=tm)||(t.fuDate&&t.fuDate<=tm));
+let s='DAILY REPORT — '+new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(nm?'\nPrepared by: '+nm:'')+'\n';
+s+='\nSummary: Completed '+dn.length+' | In progress '+op.filter(t=>t.status==='In progress').length+' | Blocked '+op.filter(t=>t.status==='Blocked').length+' | Overdue '+op.filter(isOver).length+' | Open total '+op.length+'\n';
+s+=dn.length?'\nCompleted today\n'+dn.map(t=>ln(t,'')).join('\n')+'\n':'\nCompleted today\n - (none)\n';
+s+=sec('In progress',op.filter(t=>t.status==='In progress'),t=>ln(t,t.due?' | due '+t.due:''));
+s+=sec('Blocked / waiting',op.filter(t=>t.status==='Blocked'),t=>ln(t,t.notes?' | '+t.notes:''));
+s+=sec('Work log',lg,l=>' - '+l.t+'  '+l.x);
+s+=sec('Plan for tomorrow / carry-over',nx,t=>ln(t,(isOver(t)?' | OVERDUE since '+t.due:t.due?' | due '+t.due:'')+(t.fuDate&&t.fuDate<=tm?' | follow-up '+t.fuDate+(t.fuNote?': '+t.fuNote:''):'')));
+if(note)s+='\nNotes\n'+note+'\n';
+$('repTxt').value=s}
+function copyRep(){const el=$('repTxt');try{navigator.clipboard.writeText(el.value)}catch(e){el.select();try{document.execCommand('copy')}catch(x){}}}
+$('fType').innerHTML=TYPES.map(t=>`<option>${t}</option>`).join('');
+$('fltType').innerHTML='<option value="">All types</option>'+TYPES.map(t=>`<option>${t}</option>`).join('');
+tasks=(ld(KEY)||[]).map(norm);logs=ld(LKEY)||[];cfg=ld(SKEY)||cfg;
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+render();
+</script></body></html>
